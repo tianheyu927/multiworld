@@ -539,9 +539,9 @@ class SawyerPushAndPullDoorEnv(SawyerDoorEnv):
                      goal_low=-.5,
                      goal_high=.5,
                      max_x_pos=.1,
-                     min_y_pos=.4,
+                     min_y_pos=.5,
                      max_y_pos=.7,
-                     use_line=False,
+                     use_line=True,
                      **kwargs
                 ):
         self.quick_init(locals())
@@ -582,14 +582,14 @@ class SawyerPushAndPullDoorEnv(SawyerDoorEnv):
         else:
             if self.use_line:
                 ymax = self.min_y_pos
-                x_max = (ymax - .6) / np.tan(goal)[0] - .15
+                x_max = (ymax - .6) / np.tan(state_goal)[0] - .15
                 if np.abs(x_max) > self.max_x_pos:
                     xmax = self.max_x_pos
                 else:
                     xmax = x_max
                 x_pos = np.random.uniform(-self.max_x_pos, xmax)
                 y_min = self.min_y_pos
-                y_max = .6 + np.tan(goal)[0] * (x_pos + .15)
+                y_max = .6 + np.tan(state_goal)[0] * (x_pos + .15)
                 y_pos = np.random.uniform(y_min, y_max)
                 ee_pos = np.array([x_pos, y_pos, .06])
             else:
