@@ -153,8 +153,8 @@ class SawyerDoorEnv(MultitaskEnv, MujocoEnv, Serializable, metaclass=abc.ABCMeta
         return self.model.body_names.index('leftclaw')
 
     def compute_rewards(self, actions, obs):
-        achieved_goals = obs['achieved_goal']
-        desired_goals = obs['desired_goal']
+        achieved_goals = obs['state_achieved_goal']
+        desired_goals = obs['state_desired_goal']
         reward = np.linalg.norm(achieved_goals-desired_goals, axis=1)
         if self.reward_type == 'angle_difference':
             reward =  -reward
@@ -396,8 +396,8 @@ class SawyerDoorPushOpenAndReachEnv(SawyerDoorPushOpenEnv):
         return info
 
     def compute_rewards(self, actions, obs):
-        achieved_goals = obs['achieved_goal']
-        desired_goals = obs['desired_goal']
+        achieved_goals = obs['state_achieved_goal']
+        desired_goals = obs['state_desired_goal']
         actual_angle = achieved_goals[:, -1]
         goal_angle = desired_goals[:, -1]
         pos = achieved_goals[:, :3]
@@ -542,7 +542,7 @@ class SawyerPushAndPullDoorEnv(SawyerDoorEnv):
                      min_y_pos=.4,
                      max_y_pos=.7,
                      use_line=False,
-                     **kwargs,
+                     **kwargs
                 ):
         self.quick_init(locals())
         self.max_x_pos = max_x_pos
