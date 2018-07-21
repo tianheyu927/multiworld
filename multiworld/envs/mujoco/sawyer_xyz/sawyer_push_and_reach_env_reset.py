@@ -93,7 +93,6 @@ class SawyerPushAndReachXYZEnv(MultitaskEnv, SawyerXYZEnv):
         self.init_puck_z = init_puck_z
         self.reset_free = reset_free
         self.puck_pos = self.sample_puck_xy()
-        self._set_puck_xy(self.puck_pos)
         self.mode(mode)
 
     def mode(self, name):
@@ -238,7 +237,6 @@ class SawyerPushAndReachXYZEnv(MultitaskEnv, SawyerXYZEnv):
         qpos[7:10] = np.hstack((pos.copy(), np.array([self.init_puck_z])))
         # qpos[10:14] = np.array([1, 0, 0, 0])
         qvel[7:14] = 0
-        self.puck_pos = pos
         self.set_state(qpos, qvel)
 
     def reset_model(self):
