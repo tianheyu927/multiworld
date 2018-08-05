@@ -8,11 +8,7 @@ from multiworld.core.multitask_env import MultitaskEnv
 from multiworld.envs.mujoco.sawyer_xyz.base import SawyerXYZEnv
 
 
-<<<<<<< HEAD
-class SawyerPickAndPlaceEnv(MultitaskEnv, SawyerXYZEnv):
-=======
 class SawyerPickPlaceEnv( SawyerXYZEnv):
->>>>>>> russell
     def __init__(
             self,
             obj_low=None,
@@ -23,14 +19,9 @@ class SawyerPickPlaceEnv( SawyerXYZEnv):
 
             obj_init_pos=(0, 0.6, 0.02),
 
-<<<<<<< HEAD
-            fix_goal=False,
-            fixed_goal=(0.15, 0.6, 0.055, -0.15, 0.6),
-=======
             goals = [[0, 0.7, 0.02, 0.1]],
 
             
->>>>>>> russell
             goal_low=None,
             goal_high=None,
 
@@ -51,20 +42,6 @@ class SawyerPickPlaceEnv( SawyerXYZEnv):
             obj_low = self.hand_low
 
         if goal_low is None:
-<<<<<<< HEAD
-            goal_low = np.hstack((self.hand_low, obj_low))
-        if goal_high is None:
-            goal_high = np.hstack((self.hand_high, obj_high))
-
-        self.reward_type = reward_type
-        self.indicator_threshold = indicator_threshold
-
-        self.obj_init_pos = np.array(obj_init_pos)
-
-        self.fix_goal = fix_goal
-        self.fixed_goal = np.array(fixed_goal)
-        self._state_goal = None
-=======
             goal_low = self.hand_low
 
         if obj_high is None:
@@ -82,7 +59,6 @@ class SawyerPickPlaceEnv( SawyerXYZEnv):
         self.num_goals = len(goals)
 
         
->>>>>>> russell
 
         self.obj_init_pos = np.array(obj_init_pos)
         self.hand_init_pos = np.array(hand_init_pos)
@@ -101,13 +77,7 @@ class SawyerPickPlaceEnv( SawyerXYZEnv):
         self.goal_space = Box(goal_low, goal_high)
 
         self.observation_space = Dict([
-<<<<<<< HEAD
-            ('observation', self.hand_and_obj_space),
-            ('desired_goal', self.hand_and_obj_space),
-            ('achieved_goal', self.hand_and_obj_space),
-=======
            
->>>>>>> russell
             ('state_observation', self.hand_and_obj_space),
 
             ('desired_goal', self.goal_space)
@@ -118,27 +88,6 @@ class SawyerPickPlaceEnv( SawyerXYZEnv):
         return get_asset_full_path('sawyer_xyz/sawyer_pick_and_place.xml')
 
     def viewer_setup(self):
-<<<<<<< HEAD
-        self.viewer.cam.trackbodyid = 0
-        self.viewer.cam.lookat[0] = 0
-        self.viewer.cam.lookat[1] = 1.0
-        self.viewer.cam.lookat[2] = 0.5
-        self.viewer.cam.distance = 0.3
-        self.viewer.cam.elevation = -45
-        self.viewer.cam.azimuth = 270
-        self.viewer.cam.trackbodyid = -1
-
-    def step(self, action):
-        self.set_xyz_action(action[:3])
-        self.do_simulation(action[3:])
-        # The marker seems to get reset every time you do a simulation
-        self._set_goal_marker(self._state_goal)
-        ob = self._get_obs()
-        reward = self.compute_reward(action, ob)
-        info = self._get_info()
-        done = False
-        return ob, reward, done, info
-=======
         pass
         # self.viewer.cam.trackbodyid = 0
         # self.viewer.cam.lookat[0] = 0
@@ -189,7 +138,6 @@ class SawyerPickPlaceEnv( SawyerXYZEnv):
         return ob, reward, done, { 'reachRew':reachRew,  'pickRew':pickRew, 'placeRew': placeRew, 'reward' : reward, 'placingDist': placingDist}
 
 
->>>>>>> russell
 
    
     def _get_obs(self):
@@ -219,21 +167,8 @@ class SawyerPickPlaceEnv( SawyerXYZEnv):
         self.data.site_xpos[self.model.site_name2id('hand-goal-site')] = (
             goal[:3]
         )
-<<<<<<< HEAD
-        self.data.site_xpos[self.model.site_name2id('obj-goal-site')] = (
-            goal[3:]
-        )
-        if self.hide_goal_markers:
-            self.data.site_xpos[self.model.site_name2id('hand-goal-site'), 2] = (
-                -1000
-            )
-            self.data.site_xpos[self.model.site_name2id('obj-goal-site'), 2] = (
-                -1000
-            )
-=======
        
        
->>>>>>> russell
 
     def _set_obj_xyz(self, pos):
         qpos = self.data.qpos.flat.copy()

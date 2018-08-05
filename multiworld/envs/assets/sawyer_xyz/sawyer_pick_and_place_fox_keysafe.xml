@@ -2,15 +2,15 @@
 	<include file="shared_config.xml"></include>
 	<worldbody >
 		<include file="sawyer_xyz_base.xml"></include>
-		<body name="distractor_0" pos="0.4742899868671385 1.4264426428551904 0.02">
-			<geom material="distractor_0" conaffinity="1" contype="1" condim="4" friction="10.0 0.1 0.002" density="3876.398779674613" mesh="distractor_0_mesh" rgba="1 1 1 1" type="mesh"/>
+		<body name="distractor_0" pos="0.47109607789125457 0.41730474385789956 0.02">
+			<geom material="distractor_0" conaffinity="1" contype="1" condim="3" friction="2.0 0.1 0.002" density="3745.8079372109237" mesh="distractor_0_mesh" rgba="1 1 1 1" type="mesh"/>
 			<joint name="distractor_0_joint" type="free" limited="false" damping="0.0" armature="0"/>
-			<inertial pos="0 0 0" mass=".01" diaginertia="100000 100000 100000"/>
+			<inertial pos="0 0 0" mass=".1" diaginertia="100000 100000 100000"/>
 		</body>
-		<body name="obj" pos="-0.1997735897255135 0.49901396678428683 0.017002518043703688">
-			<geom material="object" conaffinity="1" contype="1" condim="4" friction="10.0 0.1 0.002" density="437.43837098714306" mesh="object_mesh" rgba="1 1 1 1" type="mesh"/>
+		<body name="obj" pos="-0.19885552882529584 0.49994318391297277 0.017030099200107444">
+			<geom material="object" conaffinity="1" contype="1" condim="3" friction="2.0 0.1 0.002" density="566.8015035779515" mesh="object_mesh" rgba="1 1 1 1" type="mesh"/>
 			<joint name="objjoint" type="free" limited="false" damping="0.0" armature="0"/>
-			<inertial pos="0 0 0" mass=".01" diaginertia="100000 100000 100000"/>
+			<inertial pos="0 0 0" mass=".1" diaginertia="100000 100000 100000"/>
 		</body>
 		<body name="goal" pos="0.0 0.9 0.02">
 			<body name="dragonball1" pos="0.075 0 0.1">
@@ -33,15 +33,15 @@
 		</body>
 	</worldbody>
 	<asset >
-		<mesh file="/home/kevin/gym/gym/envs/mujoco/assets/sim_push_xmls/mujoco_models/fox.stl" name="object_mesh" scale="0.0013381615819350928 0.0013381615819350928 0.0013381615819350928"/>
-		<mesh file="/home/kevin/gym/gym/envs/mujoco/assets/sim_push_xmls/mujoco_models/Keysafe.stl" name="distractor_0_mesh" scale="0.0014283340629367503 0.0014283340629367503 0.0014283340629367503"/>
+		<mesh file="/home/kevin/gym/gym/envs/mujoco/assets/sim_push_xmls/mujoco_models/fox.stl" name="object_mesh" scale="0.0013258485657358383 0.0013258485657358383 0.0013258485657358383"/>
+		<mesh file="/home/kevin/gym/gym/envs/mujoco/assets/sim_push_xmls/mujoco_models/Keysafe.stl" name="distractor_0_mesh" scale="0.0016057734504858585 0.0016057734504858585 0.0016057734504858585"/>
 		<texture name="distractor_0" file="/home/kevin/gym/gym/envs/mujoco/assets/sim_push_xmls/textures/obj_textures/banded_0004.png"/>
 		<material shininess="0.3" specular="1" name="distractor_0" rgba="0.9 0.9 0.9 1" texture="distractor_0"/>
 		<texture name="object" file="/home/kevin/gym/gym/envs/mujoco/assets/sim_push_xmls/textures/obj_textures/banded_0002.png"/>
 		<material shininess="0.3" specular="1" name="object" rgba="0.9 0.9 0.9 1" texture="object"/>
 	</asset>
 	<actuator >
-		<position ctrllimited="true" ctrlrange="-1 1" joint="r_close" kp="100" user="1"/>
-		<position ctrllimited="true" ctrlrange="-1 1" joint="l_close" kp="100" user="1"/>
+		<position ctrllimited="true" ctrlrange="-1 1" joint="r_close" kp="400" user="1"/>
+		<position ctrllimited="true" ctrlrange="-1 1" joint="l_close" kp="400" user="1"/>
 	</actuator>
 </mujoco>
