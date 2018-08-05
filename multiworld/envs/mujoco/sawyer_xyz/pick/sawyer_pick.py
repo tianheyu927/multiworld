@@ -20,6 +20,11 @@ class SawyerPickEnv(SawyerXYZEnv):
             goal_low=None,
             goal_high=None,
 
+            goals = None,
+           
+
+            hand_init_pos = (0, 0.4, 0.05),
+
             
 
             **kwargs
@@ -48,27 +53,35 @@ class SawyerPickEnv(SawyerXYZEnv):
       
         self.obj_init_pos = np.array([obj_init_pos[0], obj_init_pos[1], 0.02])
 
+        if goals == None:
+            self.goals = [self.obj_init_pos]
+
+        self.hand_init_pos = np.array(hand_init_pos)
        
         self.heightTarget = 0.1
 
 
         
+        self.num_goals = len(self.goals)
 
+        
         self.action_space = Box(
             np.array([-1, -1, -1, -1]),
             np.array([1, 1, 1, 1]),
         )
-        self.hand_and_obj_space = Box(
-            np.hstack((self.hand_low, obj_low)),
-            np.hstack((self.hand_high, obj_high)),
-        )
+        self.hand_space = Box(self.hand_low, self.hand_high)
+
+        self.obj_space = Box(obj_low, obj_high)
+
         self.observation_space = Dict([
           
-            ('state_observation', self.hand_and_obj_space),
+            ('state_observation', self.hand_space),
+
+            ('desired_goal', self.obj_space)
             
         ])
         #goal is not part of observation space, specified in the dict only to define 
-        #self.goal_space. Goal not passed into the network
+        #self.goal_space. 
 
         self.reset()
 
@@ -77,15 +90,16 @@ class SawyerPickEnv(SawyerXYZEnv):
         return get_asset_full_path('sawyer_xyz/sawyer_pick_and_place.xml')
 
     def viewer_setup(self):
-        pass
-        # self.viewer.cam.trackbodyid = 0
-        # self.viewer.cam.lookat[0] = 0
-        # self.viewer.cam.lookat[1] = 1.0
-        # self.viewer.cam.lookat[2] = 0.5
-        # self.viewer.cam.distance = 0.3
-        # self.viewer.cam.elevation = -45
-        # self.viewer.cam.azimuth = 270
-        # self.viewer.cam.trackbodyid = -1
+        
+       
+        self.viewer.cam.trackbodyid = 0
+        self.viewer.cam.lookat[0] = 0
+        self.viewer.cam.lookat[1] = 1.0
+        self.viewer.cam.lookat[2] = 0.5
+        self.viewer.cam.distance = 0.6
+        self.viewer.cam.elevation = -45
+        self.viewer.cam.azimuth = 270
+        self.viewer.cam.trackbodyid = -1
 
     def step(self, action):
 
@@ -111,16 +125,19 @@ class SawyerPickEnv(SawyerXYZEnv):
             done = True
         else:
             done = False
-        return ob, reward, done, {'pickRew':pickRew}
+        return ob, reward, done, {'reward': reward , 'pickRew':pickRew}
 
     def _get_obs(self):
-        e = self.get_endeff_pos()
-        b = self.get_obj_pos()
-        flat_obs = np.concatenate((e, b))
+
+
+        flat_obs = [self.get_endeff_pos()]
+      
 
         return dict(
            
-            state_observation=flat_obs,
+            state_observation= flat_obs,
+
+            desired_goal = self._state_goal
             
         )
 
@@ -139,15 +156,29 @@ class SawyerPickEnv(SawyerXYZEnv):
         qvel[9:15] = 0
         self.set_state(qpos, qvel)
 
+
+    def sample_goal(self):
+
+
+        goal_idx = np.random.randint(0, self.num_goals)
+        goal = self.goals[goal_idx]
+
+        return [goal[0], goal[1], 0.02]
+
     def reset_model(self):
 
         
 
         self._reset_hand()
-       
-       
 
-        self._set_obj_xyz(self.obj_init_pos)
+
+       
+        obj_pos = self.sample_goal()
+
+      
+        self._state_goal = obj_pos
+
+        self._set_obj_xyz(obj_pos)
 
         self.curr_path_length = 0
       
@@ -156,7 +187,7 @@ class SawyerPickEnv(SawyerXYZEnv):
 
     def _reset_hand(self):
         for _ in range(10):
-            self.data.set_mocap_pos('mocap', np.array([0, 0.5, 0.05]))
+            self.data.set_mocap_pos('mocap', self.hand_init_pos)
             self.data.set_mocap_quat('mocap', np.array([1, 0, 1, 0]))
             self.do_simulation(None, self.frame_skip)
 
@@ -221,28 +252,7 @@ class SawyerPickEnv(SawyerXYZEnv):
 
     def get_diagnostics(self, paths, prefix=''):
         statistics = OrderedDict()
-        # for stat_name in [
-        #     'hand_distance',
-        #     'obj_distance',
-        #     'hand_and_obj_distance',
-        #     'touch_distance',
-        #     'hand_success',
-        #     'obj_success',
-        #     'hand_and_obj_success',
-        #     'touch_success',
-        # ]:
-        #     stat_name = stat_name
-        #     stat = get_stat_in_paths(paths, 'env_infos', stat_name)
-        #     statistics.update(create_stats_ordered_dict(
-        #         '%s%s' % (prefix, stat_name),
-        #         stat,
-        #         always_show_all_stats=True,
-        #     ))
-        #     statistics.update(create_stats_ordered_dict(
-        #         'Final %s%s' % (prefix, stat_name),
-        #         [s[-1] for s in stat],
-        #         always_show_all_stats=True,
-        #     ))
+       
         return statistics
 
    
