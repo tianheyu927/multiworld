@@ -6,6 +6,7 @@ from multiworld.envs.env_util import get_stat_in_paths, \
     create_stats_ordered_dict, get_asset_full_path
 from multiworld.core.multitask_env import MultitaskEnv
 from multiworld.envs.mujoco.sawyer_xyz.base import SawyerXYZEnv
+from rllab.misc.overrides import overrides
 
 
 class SawyerPickPlaceMILEnv( SawyerXYZEnv):
@@ -58,12 +59,13 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
             np.hstack((self.hand_low, obj_low)),
             np.hstack((self.hand_high, obj_high)),
         )
-
+        
+        self.goal_space = Box(goal_low, goal_high)
 
         self.observation_space = Dict([
            
             ('state_observation', self.hand_and_obj_space),
-
+            ('desired_goal', self.goal_space),
         ])
 
     # @property
@@ -73,12 +75,12 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
     def viewer_setup(self):
         # pass
         self.viewer.cam.trackbodyid = 0
-        self.viewer.cam.lookat[0] = 0
-        self.viewer.cam.lookat[1] = 1.0
-        self.viewer.cam.lookat[2] = 0.5
-        self.viewer.cam.distance = 0.6
-        self.viewer.cam.elevation = -45
-        self.viewer.cam.azimuth = 270
+        self.viewer.cam.lookat[0] = 0.3#0
+        self.viewer.cam.lookat[1] = 0.7#1.0
+        self.viewer.cam.lookat[2] = 0.3#0.5
+        self.viewer.cam.distance = 0.7#0.6
+        self.viewer.cam.elevation = -35#-45
+        self.viewer.cam.azimuth = 180#270
         self.viewer.cam.trackbodyid = -1
 
     def step(self, action):
@@ -140,8 +142,7 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
         pass
     def get_obj_pos(self):
         return self.data.get_body_xpos('obj').copy()
-
-       
+        # return self.model.body_pos[self.model.body_name2id('obj')].copy()
 
     def _set_obj_xyz(self, pos):
         qpos = self.data.qpos.flat.copy()
@@ -152,13 +153,13 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
 
 
     def reset_model(self):
-        self._state_goal = self.data.get_body_xpos('goal').copy()
-        self._state_goal = np.concatenate((self._state_goal, [self.data.get_body_xpos('dragonball1').copy()[-1] + 0.05]))
-
+        self._state_goal = self.model.body_pos[self.model.body_name2id('goal')].copy()
+        self._state_goal[-1] = 0.18 # stay above the box
+        self._state_goal = np.concatenate((self._state_goal, [self.model.body_pos[self.model.body_name2id('dragonball1')].copy()[-1] + 0.05]))
         self._reset_hand()
 
         obj_pos = np.array([np.random.uniform(low=-0.2, high=0.2), 
-                            np.random.uniform(low=0.3, high=0.7), 
+                            np.random.uniform(low=0.5, high=0.7), 
                             self.get_obj_pos()[-1]])
 
         self._set_obj_xyz(obj_pos)
@@ -179,7 +180,7 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
         if np.random.random() > 0.5:
             hand_pos = self.hand_init_pos
         else:
-            hand_pos = self._state_goal[:3] + 0.1*(np.random.random(3) - 1.0 / 2)
+            hand_pos = self._state_goal[:3] + 0.02*(np.random.random(3) - 0.5)
         for _ in range(10):
             self.data.set_mocap_pos('mocap', hand_pos)
             self.data.set_mocap_quat('mocap', np.array([1, 0, 1, 0]))
@@ -290,4 +291,11 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
     def get_diagnostics(self, paths, prefix=''):
         statistics = OrderedDict()
         return statistics
+        
+    def get_param_values(self):
+        return None
+        
+    @overrides
+    def log_diagnostics(self, paths):
+        pass
    

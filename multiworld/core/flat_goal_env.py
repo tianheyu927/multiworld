@@ -10,12 +10,11 @@ class FlatGoalEnv(ProxyEnv):
         super(FlatGoalEnv, self).__init__(wrapped_env)
 
         if obs_keys is None:
-            obs_keys = ['observation']
-        # if goal_keys is None:
-        #     goal_keys = ['desired_goal']
+            obs_keys = ['state_observation']
+        if goal_keys is None:
+            goal_keys = ['desired_goal']
         for k in obs_keys:
             assert k in self.wrapped_env.observation_space.spaces
-
 
         for k in goal_keys:
             assert k in self.wrapped_env.observation_space.spaces
