@@ -67,6 +67,9 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
             ('state_observation', self.hand_and_obj_space),
             ('desired_goal', self.goal_space),
         ])
+        
+        self.random_hand_init_pos = kwargs.get('random_hand_init_pos', False)
+        self.hand_pos_is_init = kwargs.get('hand_pos_is_init', False)
 
     # @property
     # def model_name(self):
@@ -177,10 +180,16 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
         return self._get_obs()
 
     def _reset_hand(self):
-        if np.random.random() > 0.5:
-            hand_pos = self.hand_init_pos
+        if self.random_hand_init_pos:
+            if np.random.random() > 0.5:
+                hand_pos = self.hand_init_pos
+            else:
+                hand_pos = self._state_goal[:3] + 0.02*(np.random.random(3) - 0.5)
         else:
-            hand_pos = self._state_goal[:3] + 0.02*(np.random.random(3) - 0.5)
+            if self.hand_pos_is_init:
+                hand_pos = self.hand_init_pos
+            else:
+                hand_pos = self._state_goal[:3] + 0.02*(np.random.random(3) - 0.5)
         for _ in range(10):
             self.data.set_mocap_pos('mocap', hand_pos)
             self.data.set_mocap_quat('mocap', np.array([1, 0, 1, 0]))
