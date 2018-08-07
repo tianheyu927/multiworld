@@ -70,6 +70,7 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
         
         self.random_hand_init_pos = kwargs.get('random_hand_init_pos', True)
         self.hand_pos_is_init = kwargs.get('hand_pos_is_init', True)
+        self.include_goal = kwargs.get('include_goal', False)
 
     # @property
     # def model_name(self):
@@ -130,8 +131,11 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
     def _get_obs(self):
         e = self.get_endeff_pos()
         b = self.get_obj_pos()
+        g = self._state_goal[:3]
       
         flat_obs = np.concatenate((e, b))
+        if self.include_goal:
+            flat_obs = np.concatenate((flat_obs, g))
 
         return dict(
             
@@ -157,10 +161,10 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
 
     def reset_model(self):
         self._state_goal = self.model.body_pos[self.model.body_name2id('goal')].copy()
-        self._state_goal[-1] = 0.18 # stay above the box
+        self._state_goal[-1] = 0.18# stay above the box
         self._state_goal = np.concatenate((self._state_goal, [self.model.body_pos[self.model.body_name2id('dragonball1')].copy()[-1] + 0.05]))
         self._reset_hand()
-
+        import pdb; pdb.set_trace()
         obj_pos = np.array([np.random.uniform(low=-0.2, high=0.2), 
                             np.random.uniform(low=0.5, high=0.7), 
                             self.get_obj_pos()[-1]])
