@@ -68,8 +68,8 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
             ('desired_goal', self.goal_space),
         ])
         
-        self.random_hand_init_pos = kwargs.get('random_hand_init_pos', False)
-        self.hand_pos_is_init = kwargs.get('hand_pos_is_init', False)
+        self.random_hand_init_pos = kwargs.get('random_hand_init_pos', True)
+        self.hand_pos_is_init = kwargs.get('hand_pos_is_init', True)
 
     # @property
     # def model_name(self):
@@ -85,9 +85,6 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
         self.viewer.cam.elevation = -35#-45
         self.viewer.cam.azimuth = 180#270
         self.viewer.cam.trackbodyid = -1
-        
-    def get_viewer(self):
-        return self.viewer
 
     def step(self, action):
 
@@ -193,6 +190,7 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
                 hand_pos = self.hand_init_pos
             else:
                 hand_pos = self._state_goal[:3] + 0.02*(np.random.random(3) - 0.5)
+        self.real_hand_init_pos = hand_pos
         for _ in range(10):
             self.data.set_mocap_pos('mocap', hand_pos)
             self.data.set_mocap_quat('mocap', np.array([1, 0, 1, 0]))
@@ -224,13 +222,18 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
         fingerCOM = (rightFinger + leftFinger)/2
 
 
-        graspDist = np.linalg.norm(objPos - fingerCOM)
-        graspRew = -graspDist
+        # graspDist = np.linalg.norm(objPos - fingerCOM)
+        # graspRew = -graspDist
 
         placingDist = np.linalg.norm(objPos - placingGoal)
        
-        
-
+        def graspRew():
+            graspDistxy = np.linalg.norm(objPos[:-1] - fingerCOM[:-1])
+            zRew = np.linalg.norm(fingerCOM[-1] - self.real_hand_init_pos[-1])
+            if graspDistxy < 0.1:
+                return -np.linalg.norm(objPos - fingerCOM)
+            else:
+                return -graspDistxy - graspDistz
 
         def pickCompletionCriteria():
 
