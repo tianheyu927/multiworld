@@ -3,7 +3,7 @@
 	<worldbody >
 		<include file="sawyer_xyz_base.xml"></include>
 		<body name="obj" pos="-0.10103808873836341 0.6000094978098961 0.02">
-			<geom material="object" conaffinity="1" contype="1" condim="3" friction="2.0 0.1 0.002" density="18394.056553400165" mesh="object_mesh" rgba="1 1 1 1" type="mesh"/>
+			<geom material="object" conaffinity="1" contype="1" condim="3" friction="1.0 0.1 0.002" density="18394.056553400165" mesh="object_mesh" rgba="1 1 1 1" type="mesh"/>
 			<joint name="objjoint" type="free" limited="false" damping="0.0" armature="0"/>
 			<inertial pos="0 0 0" mass=".1" diaginertia="100000 100000 100000"/>
 		</body>
