@@ -85,6 +85,9 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
         self.viewer.cam.elevation = -35#-45
         self.viewer.cam.azimuth = 180#270
         self.viewer.cam.trackbodyid = -1
+        
+    def get_viewer():
+        return self.viewer
 
     def step(self, action):
 
