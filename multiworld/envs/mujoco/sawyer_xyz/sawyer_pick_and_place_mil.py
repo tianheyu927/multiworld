@@ -120,8 +120,8 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
         
         # update _state_goal in case it moved
         self._state_goal = self.data.get_body_xpos('goal').copy()
-        self._state_goal[-1] = 0.18# stay above the box
-        self._state_goal = np.concatenate((self._state_goal, [0.2]))
+        self._state_goal[-1] = 0.12# stay above the box
+        self._state_goal = np.concatenate((self._state_goal, [0.15]))
 
 
         reward , reachRew, reachDist, pickRew, placeRew , placingDist = self.compute_rewards(action, ob)
@@ -134,6 +134,15 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
             done = True
         else:
             done = False
+        rightFinger, leftFinger = self.get_site_pos('rightEndEffector'), self.get_site_pos('leftEndEffector')
+        objPos = self.get_body_com("obj")
+        fingerCOM = (rightFinger + leftFinger)/2
+        # print(fingerCOM)
+        # print('placing dist is', placingDist)
+        # print('grasp dist is', reachDist)
+        # print('placing reward is', placeRew)
+        # print('pick reward is', pickRew)
+        # print('total reward is', reward)
         return ob, reward, done, { 'reachRew':reachRew, 'reachDist': reachDist, 'pickRew':pickRew, 'placeRew': placeRew, 'reward' : reward, 'placingDist': placingDist}
 
 
@@ -172,8 +181,8 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
 
     def reset_model(self):
         self._state_goal = self.model.body_pos[self.model.body_name2id('goal')].copy()
-        self._state_goal[-1] = 0.18# stay above the box
-        self._state_goal = np.concatenate((self._state_goal, [0.2]))
+        self._state_goal[-1] = 0.12 #0.18# stay above the box
+        self._state_goal = np.concatenate((self._state_goal, [0.15])) #0.2
         self._reset_hand()
         obj_pos = np.array([np.random.uniform(low=-0.2, high=0.2), 
                             np.random.uniform(low=0.5, high=0.7), 
@@ -243,7 +252,6 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
 
         placingDist = np.linalg.norm(objPos - placingGoal)
         placingDistxy = np.linalg.norm(objPos[:-1] - placingGoal[:-1])
-        
         def reachReward():
             graspDistxy = np.linalg.norm(objPos[:-1] - fingerCOM[:-1])
             zRew = np.linalg.norm(fingerCOM[-1] - self.real_hand_init_pos[-1])
@@ -253,7 +261,7 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
                 graspRew =  -graspDistxy - zRew
             #incentive to close fingers when graspDist is small
             if graspDist < 0.02:
-                graspRew = -graspDist + max(actions[-1],0)/50
+                graspRew = -graspDist + max(actions[-1],0)/50 #50
             return graspRew , graspDist
 
         def pickCompletionCriteria():
@@ -286,15 +294,15 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
             # Object on the ground, far away from the goal, and from the gripper
             #Can tweak the margin limits
 
-
         def pickReward():
-            
             if self.placeCompleted or (self.pickCompleted and not(objDropped())):
-                return 100*heightTarget
+                # return 100*heightTarget
+                return max(1000*heightTarget - 1000* max(objPos[2] - heightTarget, 0), 0)
        
             elif (objPos[2]> (self.blockSize + 0.005)) and (graspDist < 0.1):
                 
-                return 100* min(heightTarget, objPos[2])
+                # return 100* min(heightTarget, objPos[2])
+                return max(1000* min(heightTarget, objPos[2]) - 1000* max(objPos[2] - heightTarget, 0), 0)
          
             else:
                 return 0
@@ -308,11 +316,16 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
             placeRew = max(placeRew,0)
             placeRewxy = max(placeRewxy, 0)
             # drop the object after reaching the target
+            # if self.placeCompleted:
+            #     return [1000 - 1000*min(1, actions[-1]), placingDist]
+            # elif self.pickCompleted and (graspDist < 0.1) and not(objDropped()):
+            #     if placingDistxy < 0.05:
+            #         return [1000 - 1000*min(1, actions[-1]) + placeRewxy, placingDist]
             if self.placeCompleted:
-                return [1000 - 1000*min(1, actions[-1]), placingDist]
+                return [1000 - 1000*min(1, actions[-1]) + placeRew, placingDist]
             elif self.pickCompleted and (graspDist < 0.1) and not(objDropped()):
                 if placingDistxy < 0.05:
-                    return [1000 - 1000*min(1, actions[-1]) + placeRewxy, placingDist]
+                    return [1000 - 1000*min(1, actions[-1]) + placeRew, placingDist]
                 else:
                     return [placeRew , placingDist]
             else:
@@ -341,5 +354,12 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
         
     @overrides
     def log_diagnostics(self, paths):
+        pass
+    
+    #required by rllab parallel sampler
+    def terminate(self):
+        """
+        Clean up operation,
+        """
         pass
    

@@ -51,7 +51,8 @@ Usage:
                stiffness="0"
                armature=".1"
                user="0"/>
-        <geom solref="0.02 1"
+        <!--<geom solref="0.02 1"-->
+        <geom solref="0.01 1"
               solimp="1 1 0"
              
               />
@@ -74,6 +75,7 @@ Usage:
     </default>
 
     <equality>
-        <weld body1="mocap" body2="hand" solref="0.02 1"></weld>
+        <!--<weld body1="mocap" body2="hand" solref="0.02 1"></weld>-->
+        <weld body1="mocap" body2="hand" solref="0.01 1"></weld>
     </equality>
 </mujoco>
