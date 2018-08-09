@@ -27,7 +27,7 @@
 			<joint type="free" damping="0.0" limited="false" name="distractor_3_joint" armature="0"/>
 			<inertial diaginertia="100000 100000 100000" mass=".1" pos="0 0 0"/>
 		</body>
-		<body name="goal" pos="0.0 0.9 0.02">
+		<body name="goal" pos="0.0 1.0 0.02">
 			<body name="dragonball1" pos="0.1 0 0.06">
 				<geom rgba="1 0 1 1" type="sphere" size="0.005 0.005 0.005"/>
 			</body>
