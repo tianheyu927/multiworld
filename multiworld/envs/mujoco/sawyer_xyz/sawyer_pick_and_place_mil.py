@@ -21,6 +21,7 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
             hand_init_pos = (0, 0.4, 0.05),
             #hand_init_pos = (0, 0.5, 0.35) ,
             blockSize = 0.02,
+            include_distractors=False,
 
             **kwargs
     ):
@@ -77,6 +78,9 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
         
         self.random_hand_init_pos = kwargs.get('random_hand_init_pos', True)
         self.hand_pos_is_init = kwargs.get('hand_pos_is_init', True)
+        self.include_distractors = include_distractors
+        if include_distractors:
+            self.n_distractors = kwargs.get('n_distractors', 4)
 
     # @property
     # def model_name(self):
@@ -124,7 +128,7 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
         self._state_goal = np.concatenate((self._state_goal, [0.15]))
 
 
-        reward , reachRew, reachDist, pickRew, placeRew , placingDist = self.compute_rewards(action, ob)
+        reward , reachRew, reachDist, pickRew, placeRew , placingDist, actRew, distrRew = self.compute_rewards(action, ob)
         self.curr_path_length +=1
 
        
@@ -137,13 +141,13 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
         rightFinger, leftFinger = self.get_site_pos('rightEndEffector'), self.get_site_pos('leftEndEffector')
         objPos = self.get_body_com("obj")
         fingerCOM = (rightFinger + leftFinger)/2
-        # print(fingerCOM)
-        # print('placing dist is', placingDist)
-        # print('grasp dist is', reachDist)
-        # print('placing reward is', placeRew)
-        # print('pick reward is', pickRew)
-        # print('total reward is', reward)
-        return ob, reward, done, { 'reachRew':reachRew, 'reachDist': reachDist, 'pickRew':pickRew, 'placeRew': placeRew, 'reward' : reward, 'placingDist': placingDist}
+        print(fingerCOM)
+        print('placing dist is', placingDist)
+        print('grasp dist is', reachDist)
+        print('placing reward is', placeRew)
+        print('pick reward is', pickRew)
+        print('total reward is', reward)
+        return ob, reward, done, { 'reachRew':reachRew, 'reachDist': reachDist, 'pickRew':pickRew, 'placeRew': placeRew, 'reward' : reward, 'placingDist': placingDist, 'actRew': actRew, 'distrRew': distrRew}
 
 
 
@@ -167,15 +171,29 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
 
     def _get_info(self):
         pass
+    
     def get_obj_pos(self):
         return self.data.get_body_xpos('obj').copy()
         # return self.model.body_pos[self.model.body_name2id('obj')].copy()
+    
+    def get_distr_pos(self):
+        assert self.include_distractors
+        return [self.data.get_body_xpos('distractor_%d' % i).copy() for i in range(self.n_distractors)]
 
     def _set_obj_xyz(self, pos):
         qpos = self.data.qpos.flat.copy()
         qvel = self.data.qvel.flat.copy()
         qpos[9:12] = pos.copy()
         qvel[9:16] = 0
+        self.set_state(qpos, qvel)
+    
+    def _set_distr_xyz(self, poses):
+        assert self.include_distractors
+        qpos = self.data.qpos.flat.copy()
+        qvel = self.data.qvel.flat.copy()
+        for i in range(self.n_distractors):
+            qpos[16+7*i:19+7*i] = poses[i].copy()
+            qvel[16+7*i:19+7*i] = 0
         self.set_state(qpos, qvel)
 
 
@@ -187,9 +205,23 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
         obj_pos = np.array([np.random.uniform(low=-0.2, high=0.2), 
                             np.random.uniform(low=0.5, high=0.7), 
                             self.get_obj_pos()[-1]])
+        
         # obj_pos = np.array([0, 0.9, 0.02])
 
         self._set_obj_xyz(obj_pos)
+        if self.include_distractors:
+            distr_poses = [obj_pos]
+            for i in range(self.n_distractors):
+                distr_pos = np.array([np.random.uniform(low=-0.2, high=0.2), 
+                                np.random.uniform(low=0.5, high=0.7), 
+                                self.get_obj_pos()[-1]])
+                while min([np.linalg.norm(distr_pos[:-1] - pos[:-1]) for pos in distr_poses]) <= 0.15:
+                    distr_pos = np.array([np.random.uniform(low=-0.2, high=0.2), 
+                                np.random.uniform(low=0.5, high=0.7), 
+                                self.get_obj_pos()[-1]])
+                distr_poses.append(distr_pos)
+            distr_poses.pop(0)
+            self._set_distr_xyz(distr_poses)
 
         self.curr_path_length = 0
         self.pickCompleted = False
@@ -249,19 +281,26 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
 
         graspDist = np.linalg.norm(objPos - fingerCOM)
         # graspRew = -graspDist
-
+    
         placingDist = np.linalg.norm(objPos - placingGoal)
         placingDistxy = np.linalg.norm(objPos[:-1] - placingGoal[:-1])
+        actRew = -np.linalg.norm(actions[:-1])
+        distrRew = 0.0
+        if self.include_distractors:
+            distr_poses = self.get_distr_pos()
+            for i in range(self.n_distractors):
+                distrRew += np.linalg.norm(fingerCOM[:-1] - distr_poses[i][:-1])
         def reachReward():
             graspDistxy = np.linalg.norm(objPos[:-1] - fingerCOM[:-1])
             zRew = np.linalg.norm(fingerCOM[-1] - self.real_hand_init_pos[-1])
-            if graspDistxy < 0.02:
+            if graspDistxy < 0.02: #0.02
                 graspRew = -graspDist
             else:
-                graspRew =  -graspDistxy - zRew
+                graspRew =  -graspDistxy - zRew * 2.0
             #incentive to close fingers when graspDist is small
             if graspDist < 0.02:
                 graspRew = -graspDist + max(actions[-1],0)/50 #50
+            graspRew += 0.1 * actRew
             return graspRew , graspDist
 
         def pickCompletionCriteria():
@@ -297,12 +336,12 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
         def pickReward():
             if self.placeCompleted or (self.pickCompleted and not(objDropped())):
                 # return 100*heightTarget
-                return max(1000*heightTarget - 1000* max(objPos[2] - heightTarget, 0), 0)
+                return 1000*heightTarget - 1000* (objPos[2] - heightTarget) + actRew
        
             elif (objPos[2]> (self.blockSize + 0.005)) and (graspDist < 0.1):
                 
                 # return 100* min(heightTarget, objPos[2])
-                return max(1000* min(heightTarget, objPos[2]) - 1000* max(objPos[2] - heightTarget, 0), 0)
+                return 1000* min(heightTarget, objPos[2]) - 1000*(objPos[2] - heightTarget) + actRew
          
             else:
                 return 0
@@ -327,7 +366,7 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
                 if placingDistxy < 0.05:
                     return [1000 - 1000*min(1, actions[-1]) + placeRew, placingDist]
                 else:
-                    return [placeRew , placingDist]
+                    return [placeRew, placingDist]
             else:
                 return [0 , placingDist]
 
@@ -337,10 +376,11 @@ class SawyerPickPlaceMILEnv( SawyerXYZEnv):
         pickRew = pickReward()
         placeRew , placingDist = placeReward()
 
-        assert (placeRew >= 0 and pickRew>=0)
-        reward = reachRew + pickRew + placeRew
+        # assert (placeRew >= 0 and pickRew>=0)
+        assert (placeRew >= 0)
+        reward = reachRew + pickRew + placeRew + distrRew
 
-        return [reward, reachRew, reachDist, pickRew, placeRew, placingDist] 
+        return [reward, reachRew, reachDist, pickRew, placeRew, placingDist, actRew, distrRew] 
      
 
    

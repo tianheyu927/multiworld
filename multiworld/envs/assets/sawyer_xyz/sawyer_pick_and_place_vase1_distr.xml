@@ -1,0 +1,69 @@
+<mujoco >
+	<include file="shared_config.xml"></include>
+	<worldbody >
+		<include file="sawyer_xyz_base.xml"></include>
+		<body name="obj" pos="-0.100975034826 0.600008920909 0.02">
+			<geom mesh="object_mesh" type="mesh" solimp="0.99 0.99 0.01" condim="4" rgba="1 1 1 1" solref="0.01 1" density="32287.0837048" contype="1" friction="2.0 0.1 0.002" material="object" conaffinity="1"/>
+			<joint type="free" damping="0.0" limited="false" name="objjoint" armature="0"/>
+			<inertial diaginertia="100000 100000 100000" mass=".1" pos="0 0 0"/>
+		</body>
+		<body name="distractor_0" pos="0.2 0.5 0.02">
+			<geom mesh="distractor_0_mesh" type="mesh" solimp="0.99 0.99 0.01" condim="4" rgba="1 1 1 1" solref="0.01 1" density="13948.4568694" contype="1" friction="2.0 0.1 0.002" material="distractor_0" conaffinity="1"/>
+			<joint type="free" damping="0.0" limited="false" name="distractor_0_joint" armature="0"/>
+			<inertial diaginertia="100000 100000 100000" mass=".1" pos="0 0 0"/>
+		</body>
+		<body name="distractor_1" pos="0.108360071667 0.503342184168 0.00957061022079">
+			<geom mesh="distractor_1_mesh" type="mesh" solimp="0.99 0.99 0.01" condim="4" rgba="1 1 1 1" solref="0.01 1" density="14886.4364306" contype="1" friction="2.0 0.1 0.002" material="distractor_1" conaffinity="1"/>
+			<joint type="free" damping="0.0" limited="false" name="distractor_1_joint" armature="0"/>
+			<inertial diaginertia="100000 100000 100000" mass=".1" pos="0 0 0"/>
+		</body>
+		<body name="distractor_2" pos="0.0 0.499999997463 0.0274580932911">
+			<geom mesh="distractor_2_mesh" type="mesh" solimp="0.99 0.99 0.01" condim="4" rgba="1 1 1 1" solref="0.01 1" density="3001.76750846" contype="1" friction="2.0 0.1 0.002" material="distractor_2" conaffinity="1"/>
+			<joint type="free" damping="0.0" limited="false" name="distractor_2_joint" armature="0"/>
+			<inertial diaginertia="100000 100000 100000" mass=".1" pos="0 0 0"/>
+		</body>
+		<body name="distractor_3" pos="-0.216989493672 0.46671993121 0.00668707797908">
+			<geom mesh="distractor_3_mesh" type="mesh" solimp="0.99 0.99 0.01" condim="4" rgba="1 1 1 1" solref="0.01 1" density="12797.1964958" contype="1" friction="2.0 0.1 0.002" material="distractor_3" conaffinity="1"/>
+			<joint type="free" damping="0.0" limited="false" name="distractor_3_joint" armature="0"/>
+			<inertial diaginertia="100000 100000 100000" mass=".1" pos="0 0 0"/>
+		</body>
+		<body name="goal" pos="0.0 0.9 0.02">
+			<body name="dragonball1" pos="0.1 0 0.06">
+				<geom rgba="1 0 1 1" type="sphere" size="0.005 0.005 0.005"/>
+			</body>
+			<body name="dragonball2" pos="-0.1 0 0.06">
+				<geom rgba="1 0 1 1" type="sphere" size="0.005 0.005 0.005"/>
+			</body>
+			<geom type="box" contype="1" name="goal_bottom" conaffinity="1" rgba="1 1 0 1" size="0.1 0.1 0.001" mass="1000" pos="0 0 0.005"/>
+			<geom type="box" contype="1" name="goal_wall1" conaffinity="0" rgba="1 1 1 1" size="0.1 0.001 0.03" mass="1000" pos="0.0 0.1 0.034"/>
+			<geom type="box" contype="1" name="goal_wall2" conaffinity="0" rgba="1 1 1 1" size="0.1 0.001 0.03" mass="1000" pos="0.0 -0.1 0.034"/>
+			<geom type="box" contype="1" name="goal_wall3" conaffinity="0" rgba="1 1 1 1" size="0.001 0.1 0.03" mass="1000" pos="0.1 0 0.034"/>
+			<geom type="box" contype="1" name="goal_wall4" conaffinity="0" rgba="1 1 1 1" size="0.001 0.1 0.03" mass="1000" pos="-0.101 0 0.034"/>
+			<geom type="capsule" conaffinity="0" rgba="1 1 1 1" size="0.005" contype="1" fromto="0.098 0.098 0.0075 0.098 0.098 0.06"/>
+			<geom type="capsule" conaffinity="0" rgba="1 1 1 1" size="0.005" contype="1" fromto="0.098 -0.098 0.0075 0.098 -0.098 0.06"/>
+			<geom type="capsule" conaffinity="0" rgba="1 1 1 1" size="0.005" contype="1" fromto="-0.098 0.098 0.0075 -0.098 0.098 0.06"/>
+			<geom type="capsule" conaffinity="0" rgba="1 1 1 1" size="0.005" contype="1" fromto="-0.098 -0.098 0.0075 -0.098 -0.098 0.06"/>
+		</body>
+	</worldbody>
+	<asset >
+		<mesh file="/home/kevin/gym/gym/envs/mujoco/assets/sim_push_xmls/mujoco_models/vase1.stl" name="object_mesh" scale="0.000285086289311 0.000285086289311 0.000285086289311"/>
+		<mesh file="/home/kevin/gym/gym/envs/mujoco/assets/sim_push_xmls/mujoco_models/King.stl" name="distractor_0_mesh" scale="0.000854985754685 0.000854985754685 0.000854985754685"/>
+		<texture file="/home/kevin/gym/gym/envs/mujoco/assets/sim_push_xmls/textures/obj_textures/banded_0002.png" name="distractor_0"/>
+		<material rgba="0.9 0.9 0.9 1" specular="1" shininess="0.3" name="distractor_0" texture="distractor_0"/>
+		<mesh file="/home/kevin/gym/gym/envs/mujoco/assets/sim_push_xmls/mujoco_models/1960_corvette.stl" name="distractor_1_mesh" scale="0.000135213720329 0.000135213720329 0.000135213720329"/>
+		<texture file="/home/kevin/gym/gym/envs/mujoco/assets/sim_push_xmls/textures/obj_textures/banded_0002.png" name="distractor_1"/>
+		<material rgba="0.9 0.9 0.9 1" specular="1" shininess="0.3" name="distractor_1" texture="distractor_1"/>
+		<mesh file="/home/kevin/gym/gym/envs/mujoco/assets/sim_push_xmls/mujoco_models/VOLCANO.stl" name="distractor_2_mesh" scale="0.000166295029345 0.000166295029345 0.000166295029345"/>
+		<texture file="/home/kevin/gym/gym/envs/mujoco/assets/sim_push_xmls/textures/obj_textures/banded_0002.png" name="distractor_2"/>
+		<material rgba="0.9 0.9 0.9 1" specular="1" shininess="0.3" name="distractor_2" texture="distractor_2"/>
+		<mesh file="/home/kevin/gym/gym/envs/mujoco/assets/sim_push_xmls/mujoco_models/toy_boat_xyz_with_guns.stl" name="distractor_3_mesh" scale="0.000261881920245 0.000261881920245 0.000261881920245"/>
+		<texture file="/home/kevin/gym/gym/envs/mujoco/assets/sim_push_xmls/textures/obj_textures/banded_0002.png" name="distractor_3"/>
+		<material rgba="0.9 0.9 0.9 1" specular="1" shininess="0.3" name="distractor_3" texture="distractor_3"/>
+		<texture file="/home/kevin/gym/gym/envs/mujoco/assets/sim_push_xmls/textures/obj_textures/banded_0002.png" name="object"/>
+		<material rgba="0.9 0.9 0.9 1" specular="1" shininess="0.3" name="object" texture="object"/>
+	</asset>
+	<actuator >
+		<position ctrlrange="-1 1" user="1" ctrllimited="true" joint="r_close" kp="400"/>
+		<position ctrlrange="-1 1" user="1" ctrllimited="true" joint="l_close" kp="400"/>
+	</actuator>
+</mujoco>
