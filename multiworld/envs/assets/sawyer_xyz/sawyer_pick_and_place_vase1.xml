@@ -15,17 +15,17 @@
 			<body name="dragonball2" pos="-0.1 0 0.06">
 				<geom rgba="1 0 1 1" type="sphere" size="0.005 0.005 0.005"/>
 			</body>
-			<geom name="goal_bottom" rgba="1 1 0 1" type="box" pos="0 0 0.005" size="0.1 0.1 0.001" contype="1" conaffinity="0"  mass="1000"/>
-			<geom name="goal_wall1" rgba="1 1 1 1" type="box" pos="0.0 0.1 0.034" size="0.1 0.001 0.03" contype="0" conaffinity="0" mass="1000"/>
-			<geom name="goal_wall2" rgba="1 1 1 1" type="box" pos="0.0 -0.1 0.034" size="0.1 0.001 0.03" contype="0" conaffinity="0" mass="1000"/>
-			<geom name="goal_wall3" rgba="1 1 1 1" type="box" pos="0.1 0 0.034" size="0.001 0.1 0.03" contype="0" conaffinity="0" mass="1000"/>
-			<geom name="goal_wall4" rgba="1 1 1 1" type="box" pos="-0.101 0 0.034" size="0.001 0.1 0.03" contype="0" conaffinity="0" mass="1000"/>
-			<geom rgba="1 1 1 1" type="capsule" fromto="0.098 0.098 0.0075 0.098 0.098 0.06" size="0.005" contype="0" conaffinity="0"/>
-			<geom rgba="1 1 1 1" type="capsule" fromto="0.098 -0.098 0.0075 0.098 -0.098 0.06" size="0.005" contype="0" conaffinity="0"/>
-			<geom rgba="1 1 1 1" type="capsule" fromto="-0.098 0.098 0.0075 -0.098 0.098 0.06" size="0.005" contype="0" conaffinity="0"/>
-			<geom rgba="1 1 1 1" type="capsule" fromto="-0.098 -0.098 0.0075 -0.098 -0.098 0.06" size="0.005" contype="0" conaffinity="0"/>
-			<joint name="goal_slidey" type="slide" pos="0 0 0" axis="0 1 0" range="-10.3213 10.3" damping="1.0"/>
-			<joint name="goal_slidex" type="slide" pos="0 0 0" axis="1 0 0" range="-10.3213 10.3" damping="1.0"/>
+			<geom name="goal_bottom" rgba="1 1 0 1" type="box" pos="0 0 0.005" size="0.1 0.1 0.001" contype="1" conaffinity="1"  mass="1000"/>
+			<geom name="goal_wall1" rgba="1 1 1 1" type="box" pos="0.0 0.1 0.034" size="0.1 0.001 0.03" contype="1" conaffinity="0" mass="1000"/>
+			<geom name="goal_wall2" rgba="1 1 1 1" type="box" pos="0.0 -0.1 0.034" size="0.1 0.001 0.03" contype="1" conaffinity="0" mass="1000"/>
+			<geom name="goal_wall3" rgba="1 1 1 1" type="box" pos="0.1 0 0.034" size="0.001 0.1 0.03" contype="1" conaffinity="0" mass="1000"/>
+			<geom name="goal_wall4" rgba="1 1 1 1" type="box" pos="-0.101 0 0.034" size="0.001 0.1 0.03" contype="1" conaffinity="0" mass="1000"/>
+			<geom rgba="1 1 1 1" type="capsule" fromto="0.098 0.098 0.0075 0.098 0.098 0.06" size="0.005" contype="1" conaffinity="0"/>
+			<geom rgba="1 1 1 1" type="capsule" fromto="0.098 -0.098 0.0075 0.098 -0.098 0.06" size="0.005" contype="1" conaffinity="0"/>
+			<geom rgba="1 1 1 1" type="capsule" fromto="-0.098 0.098 0.0075 -0.098 0.098 0.06" size="0.005" contype="1" conaffinity="0"/>
+			<geom rgba="1 1 1 1" type="capsule" fromto="-0.098 -0.098 0.0075 -0.098 -0.098 0.06" size="0.005" contype="1" conaffinity="0"/>
+			<!--<joint name="goal_slidey" type="slide" pos="0 0 0" axis="0 1 0" range="-10.3213 10.3" damping="1.0"/>-->
+			<!--<joint name="goal_slidex" type="slide" pos="0 0 0" axis="1 0 0" range="-10.3213 10.3" damping="1.0"/>-->
 		</body>
 	</worldbody>
 	<asset >
