@@ -195,9 +195,17 @@ class SawyerPickPlaceMILVisionEnv( SawyerXYZEnv):
             
         )
     
-    def get_current_image_obs(self):
+    def get_current_image_obs(self, depth=False):
         e = self.get_endeff_pos()
-        img = self.render(mode='rgb_array')
+        img = self.render(mode='rgb_array', depth=depth)
+        if depth:
+            img, depth_ = img
+            depth_ = np.expand_dims(depth_[100:, :], axis=2)
+            depth_ = np.tile(depth_, (1, 1, 3))
+            pil_depth = Image.fromarray(depth_, 'RGB')
+            # depth_ = np.array(pil_image.resize((160,140), Image.ANTIALIAS))
+            # depth_ = np.array(pil_image.resize((180,110), Image.ANTIALIAS))
+            depth_ = np.array(pil_depth.resize((160,128), Image.ANTIALIAS))
         # img = img[2400:-50, :2100, :]
         # img = img[150:, :, :]
         # img = img[200:, :, :]
@@ -206,6 +214,14 @@ class SawyerPickPlaceMILVisionEnv( SawyerXYZEnv):
         # img = np.array(pil_image.resize((160,140), Image.ANTIALIAS))
         # img = np.array(pil_image.resize((180,110), Image.ANTIALIAS))
         img = np.array(pil_image.resize((160,128), Image.ANTIALIAS))
+        if depth:
+            return [img, depth_], dict(
+            
+            desired_goal=self._state_goal[:3],
+            
+            state_observation=e,
+            
+        )
         return img, dict(
             
             desired_goal=self._state_goal[:3],
@@ -224,6 +240,12 @@ class SawyerPickPlaceMILVisionEnv( SawyerXYZEnv):
     def get_distr_pos(self):
         assert self.include_distractors
         return [self.data.get_body_xpos('distractor_%d' % i).copy() for i in range(self.n_distractors)]
+        
+    def get_push_goal_pos(self):
+        return self.data.get_body_xpos('push_goal').copy()
+        
+    def get_goal_pos(self):
+        return self.data.get_body_xpos('goal').copy()
 
     def _set_obj_xyz(self, pos):
         qpos = self.data.qpos.flat.copy()
@@ -236,7 +258,9 @@ class SawyerPickPlaceMILVisionEnv( SawyerXYZEnv):
         assert self.include_distractors
         qpos = self.data.qpos.flat.copy()
         qvel = self.data.qvel.flat.copy()
-        for i in range(self.n_distractors):
+        # for i in range(self.n_distractors):
+        # for i in range(4):
+        for i in range(3):
             qpos[16+7*i:19+7*i] = poses[i].copy()
             qvel[16+7*i:19+7*i] = 0
         self.set_state(qpos, qvel)
@@ -252,8 +276,11 @@ class SawyerPickPlaceMILVisionEnv( SawyerXYZEnv):
             obj_pos = self.obj_init_pos
         else:
             obj_pos = np.array([np.random.uniform(low=-0.2, high=0.2), 
-                                np.random.uniform(low=0.45, high=0.8), 
+                                np.random.uniform(low=0.5, high=0.8), 
                                 self.get_obj_pos()[-1]])
+            # obj_pos = np.array([np.random.uniform(low=-0.2, high=0.2), 
+            #                     np.random.uniform(low=0.45, high=0.8), 
+            #                     self.get_obj_pos()[-1]])
         
         # obj_pos = np.array([0, 0.9, 0.02])
 
@@ -263,13 +290,29 @@ class SawyerPickPlaceMILVisionEnv( SawyerXYZEnv):
                 distr_poses = self.distr_init_pos
             else:
                 distr_poses = np.array([obj_pos] + [np.array([np.random.uniform(low=-0.2, high=0.2), 
-                                            np.random.uniform(low=0.45, high=0.8), 
+                                            np.random.uniform(low=0.5, high=0.8), 
                                             self.get_obj_pos()[-1]]) for _ in range(self.n_distractors)])
                 while min(cdist(distr_poses, distr_poses)[cdist(distr_poses, distr_poses) > 0]) <= 0.12:
                     distr_poses = np.array([obj_pos] + [np.array([np.random.uniform(low=-0.2, high=0.2), 
-                                            np.random.uniform(low=0.45, high=0.8), 
+                                            np.random.uniform(low=0.5, high=0.8), 
                                             self.get_obj_pos()[-1]]) for _ in range(self.n_distractors)])
+                # distr_poses = np.array([obj_pos] + [np.array([np.random.uniform(low=-0.2, high=0.2), 
+                #                             np.random.uniform(low=0.45, high=0.8), 
+                #                             self.get_obj_pos()[-1]]) for _ in range(self.n_distractors)])
+                # while min(cdist(distr_poses, distr_poses)[cdist(distr_poses, distr_poses) > 0]) <= 0.12:
+                #     distr_poses = np.array([obj_pos] + [np.array([np.random.uniform(low=-0.2, high=0.2), 
+                #                             np.random.uniform(low=0.45, high=0.8), 
+                #                             self.get_obj_pos()[-1]]) for _ in range(self.n_distractors)])
                 distr_poses = list(distr_poses)
+                if self.n_distractors == 2:
+                    distr_poses += [np.array([np.random.uniform(low=-0.04, high=0.04), np.random.uniform(low=0.96, high=1.01), 0.02])]
+                # if self.n_distractors == 3:
+                #     distr_poses += [np.array([np.random.uniform(low=-0.04, high=0.04), np.random.uniform(low=0.96, high=1.01), 0.02])]
+                # elif self.n_distractors == 2:
+                #     distractor_poses_dummy = [np.array([np.random.uniform(low=-0.04, high=0.04), np.random.uniform(low=0.96, high=1.01), 0.02]) for _ in range(2)]
+                #     if np.linalg.norm(distractor_poses_dummy[0][:-1] - distractor_poses_dummy[1][:-1]) < 0.02:
+                #         distractor_poses_dummy = [np.array([np.random.uniform(low=-0.04, high=0.04), np.random.uniform(low=0.96, high=1.01), 0.02]) for _ in range(2)]
+                #     distr_poses += distractor_poses_dummy
                 distr_poses.pop(0)
             self._set_distr_xyz(distr_poses)
 

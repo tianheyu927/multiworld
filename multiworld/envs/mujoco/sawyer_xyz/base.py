@@ -77,6 +77,11 @@ class SawyerXYZEnv(SawyerMocapBase, metaclass=abc.ABCMeta):
         self.mocap_high = np.hstack(hand_high)
 
     def set_xyz_action(self, action):
+        # for scripted policy
+        # if np.abs(action).max() > 1.5:
+        #     scale = np.abs(action).max()
+        #     action = action / scale
+        # for learning from ppo
         action = np.clip(action, -1, 1)
         
         pos_delta = action * self.action_scale

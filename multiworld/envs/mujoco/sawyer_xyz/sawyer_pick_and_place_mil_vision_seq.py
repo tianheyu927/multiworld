@@ -24,6 +24,8 @@ class SawyerPickPlaceMILVisionSeqEnv( SawyerXYZEnv):
             #hand_init_pos = (0, 0.5, 0.35) ,
             blockSize = 0.02,
             include_distractors=False,
+            distr_init_pos=None,
+            random_reset=True,
 
             **kwargs
     ):
@@ -48,7 +50,7 @@ class SawyerPickPlaceMILVisionSeqEnv( SawyerXYZEnv):
         if goal_high is None:
             goal_high = self.hand_high
 
-        self.max_path_length = 330
+        self.max_path_length = 450#330
         self.obj_init_pos = np.array(obj_init_pos)
         self.hand_init_pos = np.array(hand_init_pos)
         # use 0.02 for now
@@ -78,9 +80,11 @@ class SawyerPickPlaceMILVisionSeqEnv( SawyerXYZEnv):
             ('desired_goal', self.goal_space),
         ])
         
+        self.random_reset = random_reset
         self.random_hand_init_pos = kwargs.get('random_hand_init_pos', True)
         self.hand_pos_is_init = kwargs.get('hand_pos_is_init', True)
         self.include_distractors = include_distractors
+        self.distr_init_pos = distr_init_pos
         if include_distractors:
             self.n_distractors = kwargs.get('n_distractors', 4)
 
@@ -91,13 +95,21 @@ class SawyerPickPlaceMILVisionSeqEnv( SawyerXYZEnv):
     def viewer_setup(self):
         # pass
         self.viewer.cam.trackbodyid = 0
-        self.viewer.cam.lookat[0] = 0.3#0
-        self.viewer.cam.lookat[1] = 0.7#1.0
-        self.viewer.cam.lookat[2] = 0.4 #0.3#0.5
-        self.viewer.cam.distance = 0.6#0.7#0.6
-        self.viewer.cam.elevation = -30#-35#-45
-        self.viewer.cam.azimuth = 180#270
+        self.viewer.cam.lookat[0] = 0.2
+        self.viewer.cam.lookat[1] = 0.75
+        self.viewer.cam.lookat[2] = 0.4
+        self.viewer.cam.distance = 0.4
+        self.viewer.cam.elevation = -55
+        self.viewer.cam.azimuth = 180
         self.viewer.cam.trackbodyid = -1
+        # self.viewer.cam.trackbodyid = 0
+        # self.viewer.cam.lookat[0] = 0.3#0.3
+        # self.viewer.cam.lookat[1] = 0.7#0.7
+        # self.viewer.cam.lookat[2] = 0.4
+        # self.viewer.cam.distance = 0.6#0.6
+        # self.viewer.cam.elevation = -30#-30
+        # self.viewer.cam.azimuth = 180
+        # self.viewer.cam.trackbodyid = -1
         self.viewer.opengl_context.set_buffer_size(500, 500)
 
     def step(self, action):
@@ -144,6 +156,10 @@ class SawyerPickPlaceMILVisionSeqEnv( SawyerXYZEnv):
         rightFinger, leftFinger = self.get_site_pos('rightEndEffector'), self.get_site_pos('leftEndEffector')
         objPos = self.get_body_com("obj")
         fingerCOM = (rightFinger + leftFinger)/2
+        # if self.curr_path_length == 110:
+        #     import pdb; pdb.set_trace()
+        dropDistx = np.abs(objPos[0] - self._state_goal[0])
+        dropDisty = np.abs(objPos[1] - self._state_goal[1])
         # print("obj pos is", objPos)
         # print("goal pos is", self.data.get_body_xpos('goal').copy())
         # print("hand init pos is", self.real_hand_init_pos)
@@ -160,7 +176,7 @@ class SawyerPickPlaceMILVisionSeqEnv( SawyerXYZEnv):
         # print('pick reward is', pickRew)
         # print('act reward is', actRew)
         # print('total reward is', reward)
-        return ob, reward, done, { 'reachRew':reachRew, 'reachDist': reachDist, 'pickRew':pickRew, 'placeRew': placeRew, 'reward' : reward, 'placingDist': placingDist, 'handGoalDist': handGoalDist}#, 'actRew': actRew, 'distrRew': distrRew}
+        return ob, reward, done, { 'reachRew':reachRew, 'reachDist': reachDist, 'pickRew':pickRew, 'placeRew': placeRew, 'reward' : reward, 'placingDist': placingDist, 'handGoalDist': handGoalDist, 'dropDistx': dropDistx, 'dropDisty': dropDisty}#, 'actRew': actRew, 'distrRew': distrRew}
 
 
 
@@ -170,9 +186,50 @@ class SawyerPickPlaceMILVisionSeqEnv( SawyerXYZEnv):
         if self.curr_path_length < 110:
             b = self.get_obj_pos()
         elif self.curr_path_length < 220:
-            b = self.get_distr_pos()[1]
+            if self.curr_path_length == 110:
+                qpos = self.data.qpos.flat.copy()
+                qvel = self.data.qvel.flat.copy()
+                qpos[9:12] = np.array([10, 10, 10])
+                qvel[9:16] = 0
+                # qpos[9:12] = np.array([0.03, 0.97, 0.02])
+                # qvel[9:16] = 0
+                self.set_state(qpos, qvel)
+            b = self.get_distr_pos()[0]
         else:
-            b = self.get_distr_pos()[3]
+            if self.curr_path_length == 220:
+                assert self.include_distractors
+                qpos = self.data.qpos.flat.copy()
+                qvel = self.data.qvel.flat.copy()
+                # qpos[9:12] = np.array([10, 10, 10])
+                # qvel[9:16] = 0
+                # if np.abs(qpos[16] - self.get_goal_pos()[0]) < 0.1 and np.abs(qpos[17] - self.get_goal_pos()[1]) < 0.1:
+                #     qpos[16:19] = np.array([-10, -10, 10])
+                #     qvel[16:19] = 0
+                # qpos[9:12] = np.array([0.03, 0.97, 0.02])
+                # qvel[9:16] = 0
+                # qpos[16:19] = np.array([-0.03, 1.02, 0.02])
+                # qvel[16:19] = 0
+                self.set_state(qpos, qvel)
+            b = self.get_distr_pos()[1]
+        # elif self.curr_path_length < 220:
+        #     if self.curr_path_length == 110:
+        #         qpos = self.data.qpos.flat.copy()
+        #         qvel = self.data.qvel.flat.copy()
+        #         qpos[9:12] = np.array([10, 10, 10])
+        #         qvel[9:16] = 0
+        #         self.set_state(qpos, qvel)
+        #     b = self.get_distr_pos()[1]
+        # else:
+        #     if self.curr_path_length == 220:
+        #         assert self.include_distractors
+        #         qpos = self.data.qpos.flat.copy()
+        #         qvel = self.data.qvel.flat.copy()
+        #         # qpos[9:12] = np.array([10, 10, 10])
+        #         # qvel[9:16] = 0
+        #         qpos[23:26] = np.array([-10, -10, 10])
+        #         qvel[23:26] = 0
+        #         self.set_state(qpos, qvel)
+        #     b = self.get_distr_pos()[2]
         g = self._state_goal[:3]
       
         flat_obs = np.concatenate((e, b))
@@ -187,13 +244,33 @@ class SawyerPickPlaceMILVisionSeqEnv( SawyerXYZEnv):
             
         )
     
-    def get_current_image_obs(self):
+    def get_current_image_obs(self, depth=False):
         e = self.get_endeff_pos()
-        img = self.render(mode='rgb_array')
+        img = self.render(mode='rgb_array', depth=depth)
+        if depth:
+            img, depth_ = img
+            depth_ = np.expand_dims(depth_[100:, :], axis=2)
+            depth_ = np.tile(depth_, (1, 1, 3))
+            pil_depth = Image.fromarray(depth_, 'RGB')
+            # depth_ = np.array(pil_image.resize((160,140), Image.ANTIALIAS))
+            # depth_ = np.array(pil_image.resize((180,110), Image.ANTIALIAS))
+            depth_ = np.array(pil_depth.resize((160,128), Image.ANTIALIAS))
         # img = img[2400:-50, :2100, :]
-        img = img[150:, :, :]
+        # img = img[150:, :, :]
+        # img = img[200:, :, :]
+        img = img[100:, :, :]
         pil_image = Image.fromarray(img, 'RGB')
-        img = np.array(pil_image.resize((160,140), Image.ANTIALIAS))
+        # img = np.array(pil_image.resize((160,140), Image.ANTIALIAS))
+        # img = np.array(pil_image.resize((180,110), Image.ANTIALIAS))
+        img = np.array(pil_image.resize((160,128), Image.ANTIALIAS))
+        if depth:
+            return [img, depth_], dict(
+            
+            desired_goal=self._state_goal[:3],
+            
+            state_observation=e,
+            
+        )
         return img, dict(
             
             desired_goal=self._state_goal[:3],
@@ -212,6 +289,12 @@ class SawyerPickPlaceMILVisionSeqEnv( SawyerXYZEnv):
     def get_distr_pos(self):
         assert self.include_distractors
         return [self.data.get_body_xpos('distractor_%d' % i).copy() for i in range(self.n_distractors)]
+    
+    def get_push_goal_pos(self):
+        return self.data.get_body_xpos('push_goal').copy()
+        
+    def get_goal_pos(self):
+        return self.data.get_body_xpos('goal').copy()
 
     def _set_obj_xyz(self, pos):
         qpos = self.data.qpos.flat.copy()
@@ -235,27 +318,42 @@ class SawyerPickPlaceMILVisionSeqEnv( SawyerXYZEnv):
         self._state_goal[-1] = 0.15 #0.18# stay above the box
         self._state_goal = np.concatenate((self._state_goal, [0.15])) #0.2
         self._reset_hand()
-        # obj_pos = self.obj_init_pos
-        obj_pos = np.array([np.random.uniform(low=-0.2, high=0.2), 
-                            np.random.uniform(low=0.45, high=0.8), 
-                            self.get_obj_pos()[-1]])
+        if not self.random_reset:
+            obj_pos = self.obj_init_pos
+        else:
+            # obj_pos = np.array([np.random.uniform(low=-0.2, high=0.2), 
+            #                     np.random.uniform(low=0.5, high=0.8), 
+            #                     self.get_obj_pos()[-1]])
+            obj_pos = np.array([np.random.uniform(low=-0.1, high=0.15), 
+                                np.random.uniform(low=0.5, high=0.8), 
+                                self.get_obj_pos()[-1]])
         
         # obj_pos = np.array([0, 0.9, 0.02])
 
         self._set_obj_xyz(obj_pos)
         if self.include_distractors:
-            distr_poses = np.array([obj_pos] + [np.array([np.random.uniform(low=-0.2, high=0.2), 
-                                        np.random.uniform(low=0.45, high=0.8), 
-                                        self.get_obj_pos()[-1]]) for _ in range(self.n_distractors)])
-            while min(cdist(distr_poses, distr_poses)[cdist(distr_poses, distr_poses) > 0]) <= 0.12:
-                distr_poses = np.array([obj_pos] + [np.array([np.random.uniform(low=-0.2, high=0.2), 
-                                        np.random.uniform(low=0.45, high=0.8), 
-                                        self.get_obj_pos()[-1]]) for _ in range(self.n_distractors)])
-            distr_poses = list(distr_poses)
-            distr_poses.pop(0)
+            if not self.random_reset and self.distr_init_pos is not None:
+                distr_poses = self.distr_init_pos
+            else:
+                # distr_poses = np.array([obj_pos] + [np.array([np.random.uniform(low=-0.2, high=0.2), 
+                #                             np.random.uniform(low=0.5, high=0.8), 
+                #                             self.get_obj_pos()[-1]]) for _ in range(self.n_distractors)])
+                # while min(cdist(distr_poses, distr_poses)[cdist(distr_poses, distr_poses) > 0]) <= 0.12:
+                #     distr_poses = np.array([obj_pos] + [np.array([np.random.uniform(low=-0.2, high=0.2), 
+                #                             np.random.uniform(low=0.5, high=0.8), 
+                #                             self.get_obj_pos()[-1]]) for _ in range(self.n_distractors)])
+                distr_poses = np.array([obj_pos] + [np.array([np.random.uniform(low=-0.1, high=0.2), 
+                                            np.random.uniform(low=0.55, high=0.8), 
+                                            self.get_obj_pos()[-1]]) for _ in range(self.n_distractors)])
+                while min(cdist(distr_poses, distr_poses)[cdist(distr_poses, distr_poses) > 0]) <= 0.1:
+                    distr_poses = np.array([obj_pos] + [np.array([np.random.uniform(low=-0.1, high=0.2), 
+                                            np.random.uniform(low=0.55, high=0.8), 
+                                            self.get_obj_pos()[-1]]) for _ in range(self.n_distractors)])
+                distr_poses = list(distr_poses)
+                distr_poses.pop(0)
             self._set_distr_xyz(distr_poses)
 
-        self.curr_path_length = 0
+        self.curr_path_length = 110#220#0
         self.pickCompleted = False
         self.placeCompleted = False
 
@@ -281,7 +379,7 @@ class SawyerPickPlaceMILVisionSeqEnv( SawyerXYZEnv):
             else:
                 hand_pos = self._state_goal[:3] + 0.05*(np.random.random(3) - 0.5)
                 hand_pos[-1] += 0.05
-        # print('hand pos is', hand_pos)
+        print('hand pos is', hand_pos)
         self.real_hand_init_pos = hand_pos
         for _ in range(10):
             self.data.set_mocap_pos('mocap', hand_pos)

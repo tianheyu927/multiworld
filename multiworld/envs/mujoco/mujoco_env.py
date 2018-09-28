@@ -111,13 +111,16 @@ class MujocoEnv(gym.Env):
         for _ in range(n_frames):
             self.sim.step()
 
-    def render(self, mode='human', width=DEFAULT_SIZE, height=DEFAULT_SIZE):
-        if mode == 'rgb_array':
+    def render(self, mode='human', width=DEFAULT_SIZE, height=DEFAULT_SIZE, depth=False):
+        if 'rgb_array' in mode:
             self._get_viewer(mode).render(width, height)
             # window size used for old mujoco-py:
-            data = self._get_viewer(mode).read_pixels(width, height, depth=False)
+            data = self._get_viewer(mode).read_pixels(width, height, depth=depth)
             # original image is upside-down, so flip it
-            return data[::-1, :, :]
+            if not depth:
+                return data[::-1, :, :]
+            else:
+                return data[0][::-1, :, :], data[1][::-1, :]
         elif mode == 'human':
             self._get_viewer(mode).render()
 
@@ -133,10 +136,14 @@ class MujocoEnv(gym.Env):
         if self.viewer is None:
             if mode == 'human':
                 self.viewer = mujoco_py.MjViewer(self.sim)
-            elif mode == 'rgb_array':
+            elif 'rgb_array' in mode:
                 self.viewer = mujoco_py.MjRenderContextOffscreen(self.sim, 0)
             self.viewer_setup()
             self._viewers[mode] = self.viewer
+        # if mode == 'rgb_array_y':
+        #     self.viewer_setup(view_angle='y')
+        # else:
+        #     self.viewer_setup()
         return self.viewer
 
     def get_body_com(self, body_name):
